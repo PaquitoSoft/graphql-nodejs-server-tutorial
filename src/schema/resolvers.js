@@ -32,8 +32,8 @@ async function allLinks(root, data, context) {
 
 // Mutations
 async function createLink(root, data, context) {
-	const { mongo: { Links } } = context;
-	const response = await Links.insert(data);
+	const { mongo: { Links }, user } = context;
+	const response = await Links.insert({ ...data, postedById: user && user._id });
 	return { ...data, id: response.insertedIds[0] };
 }
 
@@ -66,7 +66,11 @@ module.exports = {
 	Query: { allLinks },
 	Mutation: { createLink, createUser, signinUser },
 	Link: {
-		id: root => root._id || root.id
+		id: root => root._id || root.id,
+		postedBy: async ({ postedById }, data, context) => {
+			const { mongo: { Users } } = context;
+			return await Users.findOne({ _id: postedById });
+		}
 	},
 	User: {
 		id: root => root._id || root.id

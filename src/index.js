@@ -22,7 +22,10 @@ const start = async () => {
 			schema
 		}
 	}));
-	app.use('/graphiql', graphiqlExpress({ endpointURL: '/graphql' }));
+	app.use('/graphiql', graphiqlExpress({
+		endpointURL: '/graphql',
+		passHeader: `'Authorization': 'bearer token-paquitosoftware@gmail.com'`
+	}));
 
 	app.listen(SERVER_PORT, () => {
 		console.log(`Hackernews GrapQL server running on SERVER_port ${SERVER_PORT}`);
