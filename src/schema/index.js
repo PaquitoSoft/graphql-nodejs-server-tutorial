@@ -35,7 +35,7 @@ const typeDefs = `
 	}
 
 	type Query {
-		allLinks: [Link!]!
+		allLinks(filter: LinkFilter): [Link!]!
 	}
 
 	type Mutation {
@@ -60,6 +60,12 @@ const typeDefs = `
 
 	input LinkSubscriptionFilter {
 		mutation_in: [_ModelMutationType!]
+	}
+
+	input LinkFilter {
+		OR: [LinkFilter!]
+		description_contains: String
+		url_contains: String
 	}
 
 	enum _ModelMutationType {
