@@ -25,6 +25,20 @@
 // };
 
 const { ObjectID } = require('mongodb');
+const pubsub = require('../pub-sub');
+
+class ValidationError extends Error {
+	constructor(message, field) {
+		super(message);
+		this.field = field;
+	}
+}
+
+function validateLink(url) {
+	if (!/^https?/.test(url)) {
+		throw new ValidationError('Link validation error: invalid url.', 'url');
+	}
+}
 
 // Queries
 async function allLinks(root, data, context) {
@@ -35,8 +49,26 @@ async function allLinks(root, data, context) {
 // Mutations
 async function createLink(root, data, context) {
 	const { mongo: { Links }, user } = context;
-	const response = await Links.insert({ ...data, postedById: user && user._id });
-	return { ...data, id: response.insertedIds[0] };
+	validateLink(data.url);
+
+	const newLink = {
+		...data,
+		postedById: user && user._id
+	};
+	const response = await Links.insert(newLink);
+
+	newLink.id = response.insertedIds[0];
+	pubsub.publish('Link', {
+		Link: {
+			mutation: 'CREATED',
+			node: newLink
+		}
+	});
+
+	return newLink;
+
+	// const response = await Links.insert({ ...data, postedById: user && user._id });
+	// return { ...data, id: response.insertedIds[0] };
 }
 
 async function createUser(root, data, context) {
@@ -74,9 +106,17 @@ async function signinUser(root, data, context) {
 	}
 }
 
+// Subscriptions
+function subscribe() {
+	return pubsub.asyncIterator('Link');
+}
+
 module.exports = {
 	Query: { allLinks },
 	Mutation: { createLink, createUser, signinUser, createVote },
+	Subscription: {
+		Link: { subscribe }
+	},
 	Link: {
 		id: root => root._id || root.id,
 		postedBy: async ({ postedById }, data, context) => {

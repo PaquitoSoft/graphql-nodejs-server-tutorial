@@ -29,6 +29,11 @@ const typeDefs = `
 		link: Link!
 	}
 
+	type LinkSubscriptionPayload {
+		mutation_in: _ModelMutationType!
+		node: Link
+	}
+
 	type Query {
 		allLinks: [Link!]!
 	}
@@ -40,6 +45,10 @@ const typeDefs = `
 		signinUser(credentials: AUTH_PROVIDER): SigninPayload!
 	}
 
+	type Subscription {
+		Link(filter: LinkSubscriptionFilter): LinkSubscriptionPayload
+	}
+
 	input AuthProviderSignupData {
 		credentials: AUTH_PROVIDER
 	}
@@ -47,6 +56,16 @@ const typeDefs = `
 	input AUTH_PROVIDER {
 		email: String!
 		password: String!
+	}
+
+	input LinkSubscriptionFilter {
+		mutation_in: [_ModelMutationType!]
+	}
+
+	enum _ModelMutationType {
+		CREATED
+		UPDATED
+		DELETED
 	}
 `;
 
