@@ -60,10 +60,17 @@ function buildFilters({ OR = [], description_contains, url_contains }) {
 }
 
 // Queries
-async function allLinks(root, { filter }, context) {
+async function allLinks(root, { filter, first, skip }, context) {
 	const { mongo: { Links } } = context;
 	const query = filter ? { $or: buildFilters(filter) } : {};
-	return await Links.find(query).toArray();
+	const cursor = Links.find(query);
+	if (first) {
+		cursor.limit(first);
+	}
+	if (skip) {
+		cursor.skip(skip);
+	}
+	return await cursor.toArray();
 }
 
 // Mutations
